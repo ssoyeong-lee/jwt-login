@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1 id="hh">로그인 전</h1>
+    <button onclick="clickLoginBtn(this.id)">login 버튼</button>
+    <button onclick="clickGetBtn(this.id)">GET</button>
+    <div id="bb"></div>
+</body>
+<script type="text/javascript">
+    var authorizationHeader;
+    const hh = document.getElementById('hh');
+    const bb = document.getElementById('bb');
+
+    function clickLoginBtn(btnId) {
+        fetch("http://localhost:8080/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: "username=user&password=1234"}
+        ).then((response) => {
+            console.log('로그인 요청 보내기 성공!');
+            authorizationHeader = response.headers.get('Authorization');
+            hh.innerText = '로그인 성공';
+        });
+    }
+
+    function clickGetBtn(btnId) {
+        fetch("http://localhost:8080", {
+            headers: {"Authorization": authorizationHeader},
+            credentials: 'include'
+        }).then((response) => response.json())
+        .then(data => {
+            console.log(data);
+            bb.innerText = JSON.stringify(data);
+        });
+    }
+</script>
+</html>
