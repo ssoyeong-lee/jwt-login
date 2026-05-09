@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,14 @@ public class JwtSuccessHandler implements AuthenticationSuccessHandler {
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 		Authentication authentication) throws IOException, ServletException {
 		UserDetails principal = (UserDetails)authentication.getPrincipal();
-		response.addHeader("Authorization", "Bearer " + jwtProvider.createJwt(principal.getUsername()));
+		response.addHeader("Authorization", "Bearer " + jwtProvider.createJwt(TokenType.ACCESS, principal.getUsername()));
 		response.getWriter().println("{\"message\": \"login success\"}");
+
+		String refresh = jwtProvider.createJwt(TokenType.REFRESH, principal.getUsername());
+		Cookie cookie = new Cookie("refresh", refresh);
+		cookie.setHttpOnly(true);
+		cookie.setMaxAge(TokenType.REFRESH.getExpiration());
+		cookie.setAttribute("SameSite", "Strict");
+		response.addCookie(cookie);
 	}
 }

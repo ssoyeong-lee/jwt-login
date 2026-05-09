@@ -32,7 +32,9 @@ public class JwtFilter extends OncePerRequestFilter {
 		try {
 			jwtProvider.validateJwt(jwt);
 		} catch (JwtException je) {
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, je.getMessage());
+			// response.sendError(HttpServletResponse.SC_UNAUTHORIZED, je.getMessage());
+			// return;
+			filterChain.doFilter(request, response);
 			return;
 		}
 

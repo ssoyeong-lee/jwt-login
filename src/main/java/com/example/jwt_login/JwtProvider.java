@@ -5,6 +5,7 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.apache.el.parser.Token;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -18,21 +19,22 @@ import io.jsonwebtoken.security.Keys;
 public class JwtProvider {
 	private final SecretKey key;
 	private final JwtParser jwtParser;
-	private final long expirationDuration;
 	private final String issuer = "JWT Login Project";
 
 	public JwtProvider(@Value("${spring.jwt.secret-key}") String secretKey) {
 		this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 		this.jwtParser = Jwts.parser().verifyWith(key).requireIssuer(issuer).build();
-		this.expirationDuration = 3 * 60 * 1000L;
 	}
 
-	public String createJwt(String username) {
+	public String createJwt(TokenType tokenType, String username) {
 		return Jwts.builder()
+			.header()
+			.add("tokenType", tokenType)
+			.and()
 			.claim("username", username)
 			.issuer(issuer)
 			.issuedAt(new Date())
-			.expiration(new Date(System.currentTimeMillis() + expirationDuration))
+			.expiration(new Date(System.currentTimeMillis() + tokenType.getExpiration() * 1000L))
 			.signWith(key)
 			.compact();
 	}
