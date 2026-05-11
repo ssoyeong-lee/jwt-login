@@ -21,14 +21,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import lombok.RequiredArgsConstructor;
+
 @EnableWebSecurity
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 	private final JwtProvider jwtProvider;
-
-	public SecurityConfig(JwtProvider jwtProvider) {
-		this.jwtProvider = jwtProvider;
-	}
+	private final RefreshTokenService refreshTokenService;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -63,7 +63,7 @@ public class SecurityConfig {
 
 	@Bean
 	public AuthenticationSuccessHandler authenticationSuccessHandler() {
-		return new JwtSuccessHandler(jwtProvider);
+		return new JwtSuccessHandler(jwtProvider, refreshTokenService);
 	}
 
 	UrlBasedCorsConfigurationSource apiConfigurationSource() {

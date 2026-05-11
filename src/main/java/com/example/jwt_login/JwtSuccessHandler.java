@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JwtSuccessHandler implements AuthenticationSuccessHandler {
 	private final JwtProvider jwtProvider;
+	private final RefreshTokenService refreshTokenService;
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -31,5 +32,7 @@ public class JwtSuccessHandler implements AuthenticationSuccessHandler {
 		cookie.setMaxAge(TokenType.REFRESH.getExpiration());
 		cookie.setAttribute("SameSite", "Strict");
 		response.addCookie(cookie);
+
+		refreshTokenService.save(principal.getUsername(), refresh);
 	}
 }

@@ -12,10 +12,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController {
 	private final JwtProvider jwtProvider;
+	private final RefreshTokenService refreshTokenService;
 
 	@GetMapping("/refresh")
 	String refreshAccessToken(@CookieValue String refresh) {
 		jwtProvider.validateJwt(refresh);
-		return jwtProvider.createJwt(TokenType.REFRESH, "test");
+		String username = jwtProvider.getUsername(refresh);
+		String dbRefresh = refreshTokenService.findByUsername(username);
+		if (!refresh.equals(dbRefresh))
+			throw new RuntimeException("디비에 저장된 refresh와 일치하지 않음");
+		return jwtProvider.createJwt(TokenType.REFRESH, username);
 	}
 }
