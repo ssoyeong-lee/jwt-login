@@ -9,6 +9,7 @@
     <button onclick="clickLoginBtn(this.id)">login 버튼</button>
     <button onclick="clickGetBtn(this.id)">GET</button>
     <button onclick="clickRefresh(this.id)">Refresh</button>
+    <button onclick="clickLogout(this.id)">logout</button>
     <div id="bb"></div>
 </body>
 <script type="text/javascript">
@@ -49,6 +50,17 @@
             tmp = "Bearer " + data;
             bb.innerText = tmp;
             sessionStorage.setItem("authorizationHeader", tmp);
+        });
+    }
+
+    function clickLogout(btnId) {
+        fetch("http://localhost:8080/logout", {
+            headers: {"Authorization": sessionStorage.getItem("authorizationHeader")},
+            credentials: 'include'
+        }).then((response) => response.text())
+        .then(data => {
+            console.log(data);
+            sessionStorage.removeItem("authorizationHeader");
         });
     }
 </script>

@@ -18,6 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
@@ -33,21 +35,26 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
 		return http
+			.addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
+
 			.csrf(AbstractHttpConfigurer::disable)
-			.httpBasic(AbstractHttpConfigurer::disable)
+			.cors(cors -> cors
+				.configurationSource(apiConfigurationSource()))
+			.logout(logout -> logout
+				.addLogoutHandler(jwtLogoutHandler())
+				.logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+			)
 			.formLogin(form -> form
 				.successHandler(authenticationSuccessHandler()))
+			.httpBasic(AbstractHttpConfigurer::disable)
+			.sessionManagement(session -> session
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.exceptionHandling(eh -> eh
+				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 			.authorizeHttpRequests(request -> request
 				.requestMatchers("/login", "/error/**", "/auth/refresh").permitAll()
 				.anyRequest().authenticated()
 			)
-			.cors(cors -> cors
-				.configurationSource(apiConfigurationSource()))
-			.sessionManagement(session -> session
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
-			.exceptionHandling(eh -> eh
-				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 			.build();
 	}
 
@@ -62,11 +69,15 @@ public class SecurityConfig {
 	}
 
 	@Bean
+	public LogoutHandler jwtLogoutHandler() {
+		return new JwtLogoutHandler(jwtProvider, refreshTokenService);
+	}
+	@Bean
 	public AuthenticationSuccessHandler authenticationSuccessHandler() {
 		return new JwtSuccessHandler(jwtProvider, refreshTokenService);
 	}
 
-	UrlBasedCorsConfigurationSource apiConfigurationSource() {
+	private UrlBasedCorsConfigurationSource apiConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(List.of("http://localhost:63342")); //포트 변경??
 		configuration.setAllowedMethods(List.of("GET", "POST"));
