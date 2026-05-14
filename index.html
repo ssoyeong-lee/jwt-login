@@ -19,10 +19,10 @@
     function clickLoginBtn(btnId) {
         fetch("http://localhost:8080/login", {
             method: "POST",
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            headers: {"Content-Type": "application/json"},
             credentials: 'include',
-            body: "username=user&password=1234"}
-        ).then((response) => {
+            body: JSON.stringify({"username": "user", "password": "1234"})
+        }).then((response) => {
             console.log('로그인 요청 보내기 성공!');
             sessionStorage.setItem("authorizationHeader", response.headers.get('Authorization'));
             hh.innerText = '로그인 성공';

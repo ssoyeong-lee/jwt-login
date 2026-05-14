@@ -1,5 +1,7 @@
 package com.example.jwt_login;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,12 +17,15 @@ public class AuthController {
 	private final RefreshTokenService refreshTokenService;
 
 	@GetMapping("/refresh")
-	String refreshAccessToken(@CookieValue String refresh) {
+	ResponseEntity<String> refreshAccessToken(@CookieValue(required = false) String refresh) {
+		if (refresh == null) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
 		jwtProvider.validateJwt(refresh);
 		String username = jwtProvider.getUsername(refresh);
 		String dbRefresh = refreshTokenService.findByUsername(username);
 		if (!refresh.equals(dbRefresh))
 			throw new RuntimeException("디비에 저장된 refresh와 일치하지 않음");
-		return jwtProvider.createJwt(TokenType.REFRESH, username);
+		return new ResponseEntity<>(jwtProvider.createJwt(TokenType.REFRESH, username), HttpStatus.OK);
 	}
 }
